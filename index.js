@@ -34,8 +34,13 @@ io.on('connection', (socket) => {
 	//création du user
 	const user = {
 		id: socket.id,
-		nickname: settings.defaultNicknames[Math.floor(Math.random() * settings.defaultNicknames.length)]
+		nickname: settings.defaultNicknames[Math.floor(Math.random() * settings.defaultNicknames.length)],
+		position: {
+      		x: Math.random() * 100,
+      		y: Math.random() * 100
+		}
 	};
+	
 	
 	//envoie d'un nouveau user à la liste de users
 	users.push(user);
@@ -57,8 +62,14 @@ io.on('connection', (socket) => {
 	//ecoute du msg nick
 	socket.on('nick', (nickname) => {
 		user.nickname = nickname;
-		socket.emit('users', users);
+		io.emit('users', users);
 	});
+
+	//reçoit le mouvement des click sur le body
+	socket.on('move', (position) => {
+		user.position = position;
+		io.emit('users', users);
+	})
 
     // Déconnexion de l'utilisateur
     socket.on('disconnect', (user) => {
@@ -68,11 +79,6 @@ io.on('connection', (socket) => {
 		//envoie de la nouvelle liste de users
 		io.emit('users', users);
     });
-	
-	
-	/*const newuser = Object.keys(user).map(function(id) {
-		console.log(socket.id);
-	});*/
 	
 });
 
