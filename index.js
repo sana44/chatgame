@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
 	//création du user
 	const user = {
 		id: socket.id,
-		nickname: socket.id
+		nickname: settings.defaultNicknames[Math.floor(Math.random() * settings.defaultNicknames.length)]
 	};
 	
 	//envoie d'un nouveau user à la liste de users
@@ -47,21 +47,28 @@ io.on('connection', (socket) => {
 	socket.on('msg', (txt) => {
 		const message = {
 			id: uuid(),
-			userId: socket.id,
-			txt: txt,
-			date: new Date(),
+			userId: user.id,
+			txt: txt,//txt:txt c'est la même que mettre txt (valable qu'à partir de ECMAscript6 )
+			date: new Date()
 		};	
 		io.emit('msg', message);
 	});
-	
+
+	//ecoute du msg nick
+	socket.on('nick', (nickname) => {
+		user.nickname = nickname;
+		socket.emit('users', users);
+	});
+
     // Déconnexion de l'utilisateur
     socket.on('disconnect', (user) => {
         console.log('User (' + socket.id + ') vient de se déconnecter');
+		// Suppression du user de la liste
 		users.splice(users.indexOf(user),1);
+		//envoie de la nouvelle liste de users
+		io.emit('users', users);
     });
 	
-	//envoie de la nouvelle liste de users
-	io.emit('users', users);
 	
 	/*const newuser = Object.keys(user).map(function(id) {
 		console.log(socket.id);

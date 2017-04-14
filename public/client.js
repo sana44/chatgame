@@ -11,9 +11,14 @@ socket.on('connect', function() {
 // Réception d'un nouveau message
 // et ajout dans la liste
 socket.on('msg', function(message) {
+	// Récupération du user expéditeur du message et de son nickname
+	var user = users.filter(function(user){
+		return user.id === message.userId;
+	})[0];
+	var nickname = user ? user.nickname : "anonyme";
 	var messages = document.getElementById('messages');
-	var li=document.createElement('li');
-	li.innerText = message.date + " " + message.userId + ": " + message.txt;
+	var li = document.createElement('li');
+	li.innerText = message.date + " " + nickname + ": " + message.txt;
 	messages.appendChild(li);
 });
 
@@ -30,16 +35,35 @@ socket.on('users', function(users) {
 // Réception de la nouvelle liste des connectés
 // de type [{id, nickname}, ...]
 var usersUl = document.querySelector('#users ul');
-socket.on('users', function(users) {
-	usersUl.innerHTML = users.map(u => '<li>' + u.nickname + '</li>').join('');
+var users = [];
+socket.on('users', function(_users) {
+	users = _users;
+	usersUl.innerHTML = _users.map(u => '<li>' + u.nickname + '</li>').join('');
 });
 
 // Envoi d'un nouveau message
 var msgform = document.getElementById('msgform');
-msgform.addEventListener('submit', function(e){
+msgform.addEventListener('submit', function(e){//le e est une instance d'event
 	e.preventDefault();
-	socket.emit('msg', this.message.value);
+	//texte du champ
+	var txt = this.message.value;
+	//commande /nick pour changer de pseudo
+	if(txt.indexOf('/nick') === 0){
+		var nickname = txt.substring(6);
+		socket.emit('nick', nickname);
+	}else{
+		//Envoi d'un message normal
+		socket.emit('msg', txt);
+	}
 	this.message.value = '';
+
+	/*socket.emit('msg', this.message.value);
+	const nick = this.message.value.substring(0, 6);
+	if(nick === this.message.value.indexOf('/nick')){
+		socket.emit('nick', 'bob');
+	}
+	this.message.value = '';*/
+
 });
 
 // Autofocus sur le champ de texte
